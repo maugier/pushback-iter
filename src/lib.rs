@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
-/// An iterator with a `push_back()` that allows items to be pushed back
-/// onto the iterator.
+/// An iterator with a `push_back(item)` method that allows
+/// items to be pushed back onto the iterator.
 ///
 /// [`Iterator`]: trait.Iterator.html
 #[derive(Debug, Clone)]

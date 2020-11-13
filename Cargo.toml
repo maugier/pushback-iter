@@ -5,6 +5,7 @@ authors = ["Jason Hinch <594559+jhinch@users.noreply.github.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 
+description = "An iterator with a push_back method that allows items to be pushed back onto the iterator"
 repository = "https://github.com/jhinch/pushback-iter"
 keywords = ["iterator"]
 

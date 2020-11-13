@@ -11,6 +11,10 @@ pub struct PushBackIterator<I: Iterator> {
 }
 
 impl<I: Iterator> PushBackIterator<I> {
+    /// Push back an item to the beginning of the iterator.
+    ///
+    /// Items pushed back onto the iterator are returned from [`next`] in a
+    /// last-in-first out basis.
     pub fn push_back(&mut self, item: I::Item) {
         self.buffer.push_back(item)
     }
@@ -37,10 +41,18 @@ impl<I: Iterator> PushBackIterator<I> {
         Some(&self.buffer[self.buffer.len() - n - 1])
     }
 
+    /// Reserves capacity for at least `additional` more elements in the push back buffer
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity overflows `usize`.
+    ///
     pub fn reserve(&mut self, additional: usize) {
         self.buffer.reserve(additional)
     }
 
+    /// Shrinks the capacity of the buffer as much as possible.
+    ///
     pub fn shrink_to_fit(&mut self) {
         self.buffer.shrink_to_fit()
     }
@@ -111,6 +123,28 @@ impl<I: DoubleEndedIterator> DoubleEndedIterator for PushBackIterator<I> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn push_back() {
+        let items = vec![0, 1, 2, 3];
+        let mut iter = PushBackIterator::from(items.into_iter());
+        assert_eq!(iter.next(), Some(0));
+        assert_eq!(iter.next(), Some(1));
+        iter.push_back(1);
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), Some(2));
+        iter.push_back(2);
+        iter.push_back(1);
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), Some(2));
+
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), None);
+
+        iter.push_back(0);
+        assert_eq!(iter.next(), Some(0));
+        assert_eq!(iter.next(), None);
+    }
 
     #[test]
     fn peek_nth() {

@@ -1,3 +1,34 @@
+//! This create providers an implementation of `PushBackIterator` which is a
+//! wrapper around an iterator which allows for items to be pushed back onto
+//! the iterator to be consumed on subsequent call to `next()`.
+//!
+//! ```
+//! use pushback_iter::PushBackIterator;
+//!
+//! let items = vec![1, 2, 3];
+//! let mut iter = PushBackIterator::from(items.into_iter());
+//!
+//! let item = iter.next().unwrap();
+//! assert_eq!(item, 1);
+//!
+//! iter.push_back(item);
+//! assert_eq!(iter.next(), Some(1));
+//!
+//! iter.push_back(6);
+//! iter.push_back(5);
+//! assert_eq!(iter.next(), Some(5));
+//! assert_eq!(iter.next(), Some(6));
+//! assert_eq!(iter.next(), Some(2));
+//! ```
+
+#![deny(
+    missing_docs,
+    missing_debug_implementations,
+    unreachable_pub,
+    broken_intra_doc_links
+)]
+#![warn(rust_2018_idioms)]
+
 use std::collections::VecDeque;
 
 /// An iterator with a `push_back(item)` method that allows

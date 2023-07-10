@@ -72,6 +72,26 @@ impl<I: Iterator> PushBackIterator<I> {
         Some(&self.buffer[self.buffer.len() - n - 1])
     }
 
+    /// Creates a lookahead iterator that will peek successive elements without
+    /// consuming the original one.
+    ///
+    /// The lookahead iterator mutably borrows the original one.
+    ///
+    /// Unfortunately, we have to require [`Clone`] for the item type, because the
+    /// [`Iterator`] trait, as it is defined in the standard library, does not
+    /// allow us to return a reference that mutably borrows the iterator itself.
+    /// This borrow is needed because it is not safe to advance the iterator when
+    ///
+    /// the previous returned item is still alive, as this item is borrowing the
+    /// VecDeque that we have to mutate.
+    ///
+    ///
+    pub fn lookahead <'i>(&'i mut self) -> impl Iterator<Item=I::Item> + 'i
+        where I::Item: Clone
+    {
+        (0..).filter_map(move |c| self.peek_nth(c).cloned())
+    }
+
     /// Reserves capacity for at least `additional` more elements in the push back buffer
     ///
     /// # Panics

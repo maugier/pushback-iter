@@ -72,6 +72,16 @@ impl<I: Iterator> PushBackIterator<I> {
         Some(&self.buffer[self.buffer.len() - n - 1])
     }
 
+    /// Returns a lookahead iterator that will peek successive elements without
+    /// consuming the original one.
+    ///
+    /// For the reason why this requires [`Clone`], see [`LookaheadIterator`].
+    pub fn lookahead <'i>(&'i mut self) -> LookaheadIterator<'i, I>
+        where I::Item: Clone
+    {
+        LookaheadIterator { inner: self, pos: 0 }
+    }
+
     /// Reserves capacity for at least `additional` more elements in the push back buffer
     ///
     /// # Panics
@@ -148,6 +158,45 @@ impl<I: ExactSizeIterator> ExactSizeIterator for PushBackIterator<I> {
 impl<I: DoubleEndedIterator> DoubleEndedIterator for PushBackIterator<I> {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.inner.next_back().or_else(|| self.buffer.pop_front())
+    }
+}
+
+/// A lookahead iterator that doesn't consume the borrowed [`PushBackIterator`].
+///
+/// Unfortunately, we have to require [`Clone`] for the item type, because the
+/// [`Iterator`] trait, as it is defined in the standard library, does not
+/// allow us to return a reference that mutably borrows the iterator itself.
+///
+/// This borrow is needed because it is not safe to advance the iterator when
+/// the previous returned item is still alive, as this item is borrowing the
+/// VecDeque that we have to mutate.
+///
+pub struct LookaheadIterator<'i, I: Iterator>
+{
+    inner: &'i mut PushBackIterator<I>,
+    pos: usize,
+}
+
+impl <'i, I: Iterator> Iterator for LookaheadIterator<'i, I>
+    where I::Item: Clone
+{
+    type Item = I::Item;
+
+    fn next(self: &mut LookaheadIterator<'i, I>) -> Option<I::Item> {
+        self.inner.peek_nth(self.pos).cloned()
+    }
+}
+
+// Implemented by hand because Derive macro fails for some reason.
+impl <'i, I> std::fmt::Debug for LookaheadIterator<'i, I>
+    where I: Iterator + std::fmt::Debug,
+          I::Item: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LookaheadIterator")
+         .field("inner", &self.inner)
+         .field("pos", &self.pos)
+         .finish()
     }
 }
 

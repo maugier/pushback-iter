@@ -64,12 +64,21 @@ impl<I: Iterator> PushBackIterator<I> {
     /// Like [`nth`], if there is a value, it is wrapped in a `Some(T)`.
     /// But if the iteration is over, `None` is returned.
     pub fn peek_nth(&mut self, n: usize) -> Option<&I::Item> {
-        if n >= self.buffer.len() {
-            for _ in 0..=(n - self.buffer.len()) {
-                self.buffer.push_front(self.inner.next()?);
-            }
+        self.peek_nth_mut(n).map(|p| &*p)
+    }
+
+    /// Like [`peek_nth`] but returns a mutable reference.
+    pub fn peek_nth_mut(&mut self, n: usize) -> Option<&mut I::Item> {
+
+        // PANIC SAFETY: this loop is entered if len <= n. At the end of the loop, len > n.
+        for _ in self.buffer.len() ..= n {
+            self.buffer.push_front(self.inner.next()?);
         }
-        Some(&self.buffer[self.buffer.len() - n - 1])
+
+        let len = self.buffer.len();
+
+        // PANIC SAFETY: this is safe because len > n
+        Some(&mut self.buffer[len - n - 1])
     }
 
     /// Reserves capacity for at least `additional` more elements in the push back buffer

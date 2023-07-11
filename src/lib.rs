@@ -76,8 +76,9 @@ impl<I: Iterator> PushBackIterator<I> {
     /// consuming the original one.
     ///
     /// For the reason why this requires [`Clone`], see [`LookaheadIterator`].
-    pub fn lookahead <'i>(&'i mut self) -> LookaheadIterator<'i, I>
-        where I::Item: Clone
+    pub fn lookahead(&mut self) -> LookaheadIterator<'_, I>
+    where
+        I::Item: Clone,
     {
         LookaheadIterator { inner: self, pos: 0 }
     }

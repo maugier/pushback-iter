@@ -244,4 +244,19 @@ mod tests {
         assert_eq!(iter.next(), Some(2));
         assert_eq!(iter.next(), Some(3));
     }
+
+    #[test]
+    fn lookahead_iterator() {
+        let items = vec![0, 1, 2, 3, 4, 5];
+        let mut iter = PushBackIterator::from(items.into_iter());
+
+        assert_eq!(iter.next(), Some(0));
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), Some(2));
+
+        let lookahead = iter.lookahead();
+
+        assert_eq!(lookahead.take(2).collect::<Vec<_>>(), vec![3, 4]);
+        assert_eq!(iter.collect::<Vec<_>>(), vec![3, 4, 5]);
+    }
 }

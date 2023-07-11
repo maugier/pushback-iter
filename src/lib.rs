@@ -80,7 +80,10 @@ impl<I: Iterator> PushBackIterator<I> {
     where
         I::Item: Clone,
     {
-        LookaheadIterator { inner: self, pos: 0 }
+        LookaheadIterator {
+            inner: self,
+            pos: 0,
+        }
     }
 
     /// Reserves capacity for at least `additional` more elements in the push back buffer
@@ -172,14 +175,14 @@ impl<I: DoubleEndedIterator> DoubleEndedIterator for PushBackIterator<I> {
 /// the previous returned item is still alive, as this item is borrowing the
 /// VecDeque that we have to mutate.
 ///
-pub struct LookaheadIterator<'i, I: Iterator>
-{
+pub struct LookaheadIterator<'i, I: Iterator> {
     inner: &'i mut PushBackIterator<I>,
     pos: usize,
 }
 
-impl <'i, I: Iterator> Iterator for LookaheadIterator<'i, I>
-    where I::Item: Clone
+impl<'i, I: Iterator> Iterator for LookaheadIterator<'i, I>
+where
+    I::Item: Clone,
 {
     type Item = I::Item;
 
@@ -191,15 +194,16 @@ impl <'i, I: Iterator> Iterator for LookaheadIterator<'i, I>
 }
 
 // Implemented by hand because Derive macro fails for some reason.
-impl <'i, I> std::fmt::Debug for LookaheadIterator<'i, I>
-    where I: Iterator + std::fmt::Debug,
-          I::Item: std::fmt::Debug,
+impl<'i, I> std::fmt::Debug for LookaheadIterator<'i, I>
+where
+    I: Iterator + std::fmt::Debug,
+    I::Item: std::fmt::Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("LookaheadIterator")
-         .field("inner", &self.inner)
-         .field("pos", &self.pos)
-         .finish()
+            .field("inner", &self.inner)
+            .field("pos", &self.pos)
+            .finish()
     }
 }
 

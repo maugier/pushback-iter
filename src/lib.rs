@@ -85,10 +85,14 @@ impl<I: Iterator> PushBackIterator<I> {
     /// consuming the original one.
     ///
     /// For the reason why this requires [`Clone`], see [`LookaheadIterator`].
-    pub fn lookahead <'i>(&'i mut self) -> LookaheadIterator<'i, I>
-        where I::Item: Clone
+    pub fn lookahead(&mut self) -> LookaheadIterator<'_, I>
+    where
+        I::Item: Clone,
     {
-        LookaheadIterator { inner: self, pos: 0 }
+        LookaheadIterator {
+            inner: self,
+            pos: 0,
+        }
     }
 
     /// Reserves capacity for at least `additional` more elements in the push back buffer
@@ -180,32 +184,35 @@ impl<I: DoubleEndedIterator> DoubleEndedIterator for PushBackIterator<I> {
 /// the previous returned item is still alive, as this item is borrowing the
 /// VecDeque that we have to mutate.
 ///
-pub struct LookaheadIterator<'i, I: Iterator>
-{
+pub struct LookaheadIterator<'i, I: Iterator> {
     inner: &'i mut PushBackIterator<I>,
     pos: usize,
 }
 
-impl <'i, I: Iterator> Iterator for LookaheadIterator<'i, I>
-    where I::Item: Clone
+impl<'i, I: Iterator> Iterator for LookaheadIterator<'i, I>
+where
+    I::Item: Clone,
 {
     type Item = I::Item;
 
-    fn next(self: &mut LookaheadIterator<'i, I>) -> Option<I::Item> {
-        self.inner.peek_nth(self.pos).cloned()
+    fn next(&mut self) -> Option<I::Item> {
+        let next = self.inner.peek_nth(self.pos);
+        self.pos += 1;
+        next.cloned()
     }
 }
 
 // Implemented by hand because Derive macro fails for some reason.
-impl <'i, I> std::fmt::Debug for LookaheadIterator<'i, I>
-    where I: Iterator + std::fmt::Debug,
-          I::Item: std::fmt::Debug,
+impl<'i, I> std::fmt::Debug for LookaheadIterator<'i, I>
+where
+    I: Iterator + std::fmt::Debug,
+    I::Item: std::fmt::Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("LookaheadIterator")
-         .field("inner", &self.inner)
-         .field("pos", &self.pos)
-         .finish()
+            .field("inner", &self.inner)
+            .field("pos", &self.pos)
+            .finish()
     }
 }
 
@@ -249,5 +256,20 @@ mod tests {
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next(), Some(2));
         assert_eq!(iter.next(), Some(3));
+    }
+
+    #[test]
+    fn lookahead_iterator() {
+        let items = vec![0, 1, 2, 3, 4, 5];
+        let mut iter = PushBackIterator::from(items.into_iter());
+
+        assert_eq!(iter.next(), Some(0));
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), Some(2));
+
+        let lookahead = iter.lookahead();
+
+        assert_eq!(lookahead.take(2).collect::<Vec<_>>(), vec![3, 4]);
+        assert_eq!(iter.collect::<Vec<_>>(), vec![3, 4, 5]);
     }
 }

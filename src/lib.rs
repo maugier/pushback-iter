@@ -183,8 +183,10 @@ impl <'i, I: Iterator> Iterator for LookaheadIterator<'i, I>
 {
     type Item = I::Item;
 
-    fn next(self: &mut LookaheadIterator<'i, I>) -> Option<I::Item> {
-        self.inner.peek_nth(self.pos).cloned()
+    fn next(&mut self) -> Option<I::Item> {
+        let next = self.inner.peek_nth(self.pos);
+        self.pos += 1;
+        next.cloned()
     }
 }
 
